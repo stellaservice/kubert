@@ -1,4 +1,5 @@
-require 'Kubeclient'
+require 'kubeclient'
+require 'open3'
 require_relative "kubert/pods"
 
 module Kubert
