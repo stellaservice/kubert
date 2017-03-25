@@ -9,10 +9,31 @@ module Kubert
       puts Pods.list(pod_type, status)
     end
 
+    desc "sandbox", "Connect to a Rails console in sandbox that will wrap session in DB transaction and rollback when done"
+    def sandbox
+      execute("rails", "console", "--sandbox")
+    end
+
     desc "console", "Connect to a Rails console on a console pod"
     def console
-      Pods.console
+      execute("rails", "console")
     end
+
+    desc "execute command", "Connect to a pod run the specified command (with bundle exec prefix)"
+    def execute(*command)
+      Pods.execute(command)
+    end
+
+    desc "deploy", "Perform a deployment"
+    def deploy
+      Deployment.perform
+    end
+
+    desc "rollback", "Connect to a pod run the specified command (with bundle exec prefix)"
+    def rollback
+      Deployment.rollback
+    end
+
 
   end
 end

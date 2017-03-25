@@ -8,8 +8,12 @@ module Kubert
       new.console
     end
 
+    def self.execute(command)
+      new.execute(command)
+    end
+
     attr_reader :project, :pods
-    def initialize(project= ENV['PROJECT'] || "connect")
+    def initialize(project= ENV['KUBERT_PROJECT'] || "connect")
       @project = project
       @pods = []
     end
@@ -28,14 +32,15 @@ module Kubert
       pods.map(&:metadata).map(&:name)
     end
 
-    def console
+    def execute(command)
       pod = all('console').status(:running).pods.sample
+      exec_command = "kubectl exec -n #{pod.metadata.namespace} #{pod.metadata.name} -it bundle exec #{command.join(' ')}"
+      puts "Executing command: \n#{exec_command}"
       Open3.popen3("bash") do
-        exec "kubectl exec -n #{pod.metadata.namespace} #{pod.metadata.name} -it bundle exec rails c"
+        exec exec_command
       end
       puts "THIS WILL NEVER EXECUTE BECAUSE OF EXEC ABOVE"
     end
-
 
   end
 end
