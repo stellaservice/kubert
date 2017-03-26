@@ -9,6 +9,11 @@ module Kubert
       puts Pods.list(pod_type, status)
     end
 
+    desc "context", "Print current kubectl current context"
+    def context
+      puts Kubert.kube_config.contexts.select {|c| Kubert.kube_config.context.api_endpoint.match(c) }
+    end
+
     desc "sandbox", "Connect to a Rails console in sandbox that will wrap session in DB transaction and rollback when done"
     def sandbox
       execute("rails", "console", "--sandbox")
@@ -34,6 +39,12 @@ module Kubert
       Deployment.rollback
     end
 
+    Kubert.contexts.each do |context_name, context_endpoint|
+      desc context_name, "Use kubernetes #{context_endpoint} for kubectl commands"
+      define_method(context_name) do
+        puts `kubectl config use-context #{context_endpoint}`
+      end
+    end
 
   end
 end

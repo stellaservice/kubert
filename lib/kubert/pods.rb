@@ -12,14 +12,14 @@ module Kubert
       new.execute(command)
     end
 
-    attr_reader :project, :pods
-    def initialize(project= ENV['KUBERT_PROJECT'] || "connect")
-      @project = project
+    attr_reader :project_name, :pods
+    def initialize(project_name= Kubert.configuration[:project_name])
+      @project_name = project_name
       @pods = []
     end
 
     def all(pod_type)
-      @pods = Kubert.client.get_pods(label_selector: "app=#{project}-#{pod_type}")
+      @pods = Kubert.client.get_pods(label_selector: "app=#{project_name}-#{pod_type}")
       self
     end
 
