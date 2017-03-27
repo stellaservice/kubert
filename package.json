@@ -1,0 +1,34 @@
+{
+  "name": "k8s-scripts",
+  "version": "3.2.1",
+  "description": "Bash scripts for deploying and managing applications in Kubernetes",
+  "bin": {
+    "k8s-read-config": "./bin/k8s-read-config",
+    "minikube-build": "./bin/minikube-build",
+    "manage-context": "./bin/manage-context",
+    "k8s-example-config": "./bin/k8s-example-config",
+    "minikube-deploy": "./bin/minikube-deploy",
+    "minikube-delete": "./bin/minikube-delete",
+    "minikube-apply": "./bin/minikube-apply",
+    "k8s-deploy": "./bin/k8s-deploy",
+    "k8s-delete": "./bin/k8s-delete",
+    "k8s-secrets-from-s3": "./bin/k8s-secrets-from-s3",
+    "run-blocking-job": "./bin/run-blocking-job",
+    "verify-deployment": "./bin/verify-deployment",
+    "timeout.sh": "./bin/timeout.sh",
+    "k8s-apply": "./bin/k8s-apply",
+    "minikube-services": "./bin/minikube-services",
+    "minikube-services-all": "./bin/minikube-services-all",
+    "ensure-kubectl": "./bin/ensure-kubectl",
+    "prepare-kubectl": "./bin/prepare-kubectl",
+    "docker-build": "./bin/docker-build",
+    "docker-push": "./bin/docker-push",
+    "docker-pull": "./bin/docker-pull"
+  },
+  "author": "Ross Kukulinski <ross@kukulinski.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rosskukulinski/k8s-scripts.git"
+  }
+}
