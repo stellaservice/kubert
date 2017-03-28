@@ -1,6 +1,5 @@
 require_relative '../kubert'
 require 'thor'
-require "irb"
 module Kubert
   class Cli < Thor
 
@@ -29,6 +28,11 @@ module Kubert
     desc "execute command", "Connect to a task pod and run the specified command (with #{Kubert.command_prefix} prefix)"
     def execute(*command)
       Pods.execute(command)
+    end
+
+    desc "logs pod_type (status, default Running)", "Interleave and tail logs from all running pods of the specified type"
+    def logs(pod_type, status= :running)
+      Pods.logs(pod_type, status)
     end
 
     desc "deploy", "Perform a deployment"

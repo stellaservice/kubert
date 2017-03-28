@@ -1,6 +1,7 @@
 require 'kubeclient'
 require 'ky'
 require 'open3'
+require 'fiber'
 require_relative "kubert/pods"
 require_relative "kubert/deployment"
 

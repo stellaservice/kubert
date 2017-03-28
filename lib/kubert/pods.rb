@@ -12,6 +12,10 @@ module Kubert
       new.execute(command)
     end
 
+    def self.logs(pod_type, status)
+      new.all(pod_type).status(status).logs
+    end
+
     attr_reader :project_name, :pods
     def initialize(project_name= Kubert.configuration[:project_name])
       @project_name = project_name
@@ -40,6 +44,23 @@ module Kubert
         exec exec_command
       end
       puts "THIS WILL NEVER EXECUTE BECAUSE OF EXEC ABOVE"
+    end
+
+    def logs
+      fibers = names.map.with_index do |pod_name, i|
+        puts "logging #{pod_name}:"
+        watcher = Kubert.client.watch_pod_log(pod_name, pods.first.metadata.namespace)
+        pod_name = names[i]
+        log_enum = watcher.to_enum
+        Fiber.new do
+          loop do
+            Fiber.yield(puts "#{pod_name} |> #{log_enum.next}")
+          end
+        end
+      end
+      while fibers.all?(&:alive?) do
+        fibers.shuffle.each(&:resume)
+      end
     end
 
   end

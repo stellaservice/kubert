@@ -43,6 +43,7 @@ $ kubert context                  # print current kubectl context/cluster
 $ kubert deploy -e prd            # perform a production deployment
 $ kubert rollback -e prd          # rollback a production deployment
 $ kubert deploy                   # perform a deployment to the default environment
+$ kubert logs web                 # tail the logs from all web pods and interleave together
 ```
 
 A valid url may also be used in place of a file path for input.
