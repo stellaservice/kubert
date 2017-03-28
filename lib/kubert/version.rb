@@ -1,3 +1,3 @@
 module Kubert
-  VERSION = "0.0.1-dev6"
+  VERSION = "0.1.0"
 end

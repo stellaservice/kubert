@@ -13,12 +13,28 @@ module Kubert
     configuration[:contexts] || []
   end
 
+  def self.task_pod
+    configuration[:task_pod] || random_pod_type
+  end
+
   def self.default_environment
     configuration[:default_environment]
   end
 
+  def self.default_namespace
+    configuration[:default_namespace] || configuration[:default_environment]
+  end
+
   def self.context
     kube_config.contexts.select {|c| kube_config.context.api_endpoint.match(c) }
+  end
+
+  def self.console_command
+    Array(configuration[:console_command] && configuration[:console_command].split(" "))
+  end
+
+  def self.command_prefix
+    configuration[:command_prefix]
   end
 
   def self.excluded_deployments
@@ -44,4 +60,22 @@ module Kubert
       )
     end
   end
+
+  private
+
+  def self.random_pod_type
+    Kubert.client.get_pods(namespace: current_namespace)
+    .sample
+    .metadata
+    .name
+    .split("-")
+    .first
+  end
+
+  def self.current_namespace
+    KY::Configuration.new[:namespace]   ||
+    default_namespace                   ||
+    (raise "MUST DEFINE A NAMESPACE FOR POD OPERATIONS, ky namespace, default_namespace or default_environment")
+  end
+
 end

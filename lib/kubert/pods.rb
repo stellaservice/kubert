@@ -32,9 +32,9 @@ module Kubert
       pods.map(&:metadata).map(&:name)
     end
 
-    def execute(command)
-      pod = all('console').status(:running).pods.sample
-      exec_command = "kubectl exec -n #{pod.metadata.namespace} #{pod.metadata.name} -it bundle exec #{command.join(' ')}"
+    def execute(command, pod_type=Kubert.task_pod)
+      pod = all(pod_type).status(:running).pods.sample
+      exec_command = "kubectl exec -n #{pod.metadata.namespace} #{pod.metadata.name} -it #{Kubert.command_prefix} #{command.join(' ')}"
       puts "Executing command: \n#{exec_command}"
       Open3.popen3("bash") do
         exec exec_command
