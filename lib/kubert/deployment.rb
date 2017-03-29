@@ -40,7 +40,7 @@ module Kubert
     def confirm(action)
       unless ENV['SKIP_CONFIRMATION']
         puts "Press any key to confirm, ctl-c to abort: #{action.upcase} on #{Kubert.context}"
-        confirmation = $stdin.gets
+        $stdin.gets
       end
       yield
     end

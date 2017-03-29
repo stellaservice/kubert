@@ -3,6 +3,12 @@ require 'thor'
 module Kubert
   class Cli < Thor
 
+    `hash kubectl 2>/dev/null;`
+    unless $?.success?
+      puts "Please install kubectl prior to kubert usage"
+      exit $?.to_i
+    end
+
     desc "list pod_type", "Display a list of one type of Pod, only Running by default"
     def list(pod_type, status=:running)
       puts Pods.list(pod_type, status)
@@ -20,9 +26,11 @@ module Kubert
       end
     end
 
-    desc "console", "Connect to a console on a task pod"
-    def console
-      execute(*Kubert.console_command)
+    if Kubert.console_command.any?
+      desc "console", "Connect to a console on a task pod"
+      def console
+        execute(*Kubert.console_command)
+      end
     end
 
     desc "execute command", "Connect to a task pod and run the specified command (with #{Kubert.command_prefix} prefix)"
@@ -35,26 +43,29 @@ module Kubert
       Pods.logs(pod_type, status)
     end
 
-    desc "deploy", "Perform a deployment"
-    method_option :namespace, type: :string, aliases: "-n"
-    method_option :environment, type: :string, aliases: "-e"
-    method_option :image_tag, type: :string, aliases: "-t"
-    method_option :configmap_path, type: :string, aliases: "-c"
-    method_option :secrets_path, type: :string, aliases: "-s"
-    method_option :output_dir, type: :string, aliases: "-o"
-    def deploy
-      Deployment.perform(options)
-    end
 
-    desc "rollback", "Rollback a deployment, reverse of a kubert deploy command with same flags"
-    method_option :namespace, type: :string, aliases: "-n"
-    method_option :environment, type: :string, aliases: "-e"
-    method_option :image_tag, type: :string, aliases: "-t"
-    method_option :configmap_path, type: :string, aliases: "-c"
-    method_option :secrets_path, type: :string, aliases: "-s"
-    method_option :output_dir, type: :string, aliases: "-o"
-    def rollback
-      Deployment.rollback(options)
+    if Kubert.ky_active?
+      desc "deploy", "Perform a deployment"
+      method_option :namespace, type: :string, aliases: "-n"
+      method_option :environment, type: :string, aliases: "-e"
+      method_option :image_tag, type: :string, aliases: "-t"
+      method_option :configmap_path, type: :string, aliases: "-c"
+      method_option :secrets_path, type: :string, aliases: "-s"
+      method_option :output_dir, type: :string, aliases: "-o"
+      def deploy
+        Deployment.perform(options)
+      end
+
+      desc "rollback", "Rollback a deployment, reverse of a kubert deploy command with same flags"
+      method_option :namespace, type: :string, aliases: "-n"
+      method_option :environment, type: :string, aliases: "-e"
+      method_option :image_tag, type: :string, aliases: "-t"
+      method_option :configmap_path, type: :string, aliases: "-c"
+      method_option :secrets_path, type: :string, aliases: "-s"
+      method_option :output_dir, type: :string, aliases: "-o"
+      def rollback
+        Deployment.rollback(options)
+      end
     end
 
     Kubert.contexts.each do |context_name, context_endpoint|

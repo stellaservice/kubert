@@ -6,8 +6,13 @@ require_relative "kubert/pods"
 require_relative "kubert/deployment"
 
 module Kubert
+  DEFAULT_KUBE_CONFIG_PATH = '~/.kube/config'
   def self.kube_config
-    @kube_config ||= Kubeclient::Config.read(File.expand_path('~/.kube/config'))
+    @kube_config ||= Kubeclient::Config.read(File.expand_path(kube_config_path))
+  end
+
+  def self.kube_config_path
+    configuration[:kube_config_path] || DEFAULT_KUBE_CONFIG_PATH
   end
 
   def self.contexts
@@ -42,11 +47,16 @@ module Kubert
     configuration[:excluded_deployments] || []
   end
 
+  def self.ky_configuration
+    @ky_configuration ||= KY::Configuration.new
+  end
+
+  def self.ky_active?
+    ky_configuration[:image] && ky_configuration[:deployment] && ky_configuration[:procfile_path]
+  end
+
   def self.configuration
-    @config ||= begin
-      config = KY::Configuration.new
-      (config[:kubert] || {}).merge(project_name: config[:project_name])
-    end
+    @config ||= (ky_configuration[:kubert] || {}).merge(project_name: ky_configuration[:project_name])
   end
 
   def self.client
@@ -74,7 +84,7 @@ module Kubert
   end
 
   def self.current_namespace
-    KY::Configuration.new[:namespace]   ||
+    ky_configuration[:namespace]        ||
     default_namespace                   ||
     (raise "MUST DEFINE A NAMESPACE FOR POD OPERATIONS, ky namespace, default_namespace or default_environment")
   end
