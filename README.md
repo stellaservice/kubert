@@ -1,8 +1,8 @@
 # Kubert - Your helpful kubernetes ruby terminal friend!
 
-## The gem relies on a second gem, [ky](https://github.com/stellaservice/ky) which may be used independently
+## The gem relies on a second gem, [ky](https://github.com/stellaservice/ky), though the two may also be used independently, other than a shared config file.
 
-# Install gem via `gem install kubert` as usual.  This will also install the ky gem, which handles configuration.
+Install gem via `gem install kubert` as usual.  This will also install the ky gem, which handles configuration and manages environments and DRYing yaml for deployments.  (If anyone wanted to provide similar interoperability with [helm](http://helm.sh) that would be awesome, we might prefer using that as the more standard solution but we use ky for now for various interoperabiltiy related reasons.)
 
 Kubert assumes your kubernetes config file lives in `~/.kube/config` and reads that to talk to the cluster.
 
@@ -14,15 +14,17 @@ ky manages the scope of a deployment as a group of related, seperate kubernetes 
 project_name: "my-project"
 kubert:
   contexts:
-    staging: staging.example.com   # as many values here as you have distinct clusters in kubeconfig
+    staging: staging.example.com                  # as many values here as you have distinct clusters in kubeconfig
     prod: production.example.com
-  excluded_deployments: [sanitize, migration] # optional/possibly uncommon use case, see below
+  excluded_deployments: [sanitize,migration]      # optional/possibly uncommon use case, see below
   default_environment: stg
-  default_namespace: default       # defaults to same as default_environment, specify if different
-  task_pod: console
-  console_command: rails c         # optional, but no console command unless present
-  command_prefix: bundle exec      # optional
-  kube_config_path: ~/.kube/config # No need to specify unless you store file elsewhere
+  default_namespace: default                      # defaults to same as default_environment, specify if different
+  task_pod: console                               # deployment id (from Procfile) for tasks/console, selected at random if blank
+  console_command: rails c                        # optional, but no console command unless present
+  command_prefix: bundle exec                     # optional
+  kube_config_path: ~/.kube/config                # No need to specify unless you store file elsewhere
+  s3_secret_path: s3://my-bucket/environments/    # If defined, must manually install aws-sdk gem and have credentials for bucket as defaults (for now)
+  s3_config_path: s3://my-bucket/environments     # Ditto, with or w/o trailing slash, less likely as could be checked in but supporting for symmetry
 ```
 
 The project name is used by ky and assumes a metadata namespace for your app deployments in the format of `{{project_name}}-{{deployment_name}}`, so as long as your deployments obey this pattern it should be usable for you without ky.
@@ -38,17 +40,30 @@ console_command and console_prefix are for opening a REPL and for prefixing all 
 
 kube_config_path is probably not needed unless your kubernetes config is located elsewhere
 
+s3_secret_path and s3_config_path tell kubert not to use the locally configured ky build path, but to read and write either/both values to a an s3 bucket
+The value provided must begin with s3:// and provide bucket name and path to a folder in bucket containing one folder per environment, i.e. for
+example above s3://my-bucket/environments/stg/my-project.secret.yml and s3://my-bucket/environments/stg/my-project.configmap.yml
+
+Kubert will also download from these locations when deploying to kubernetes, and then delete when done to avoid confusion/leaking data, if specified.
+
 ###Example usage
 ```
-$ kubert console                  # open a console on a task_pod
-$ kubert execute rake db:migrate  # run a migration
-$ kubert list web                 # list all running web pods
-$ kubert sandbox                  # only if rails c/rails console is console_command above, opens console wrapped in DB transaction
-$ kubert context                  # print current kubectl context/cluster
-$ kubert deploy -e prd            # perform a production deployment
-$ kubert rollback -e prd          # rollback a production deployment
-$ kubert deploy                   # perform a deployment to the default environment
-$ kubert logs web                 # tail the logs from all web pods and interleave together
+$ kubert console                        # open a console on a task_pod
+$ kubert execute rake db:migrate        # run a migration
+$ kubert list web                       # list all running web pods
+$ kubert sandbox                        # only if rails c/rails console is console_command above, opens console wrapped in DB transaction
+$ kubert context                        # print current kubectl context/cluster
+$ kubert deploy -e prd                  # perform a production deployment
+$ kubert rollback -e prd                # rollback a production deployment
+$ kubert deploy                         # perform a deployment to the default environment
+$ kubert logs web                       # tail the logs from all web pods and interleave together
+$ kubert env all                        # print all secret/configmap values, with secrets sanitized showing last 4 characters
+$ kubert env all --cleartext-secrets    # print all secret/configmap values, with secrets fully visible
+$ kubert env get secret-or-config-key   # print one env value defined in configmap or secrets for default environment
+$ kubert env set key value              # update one env key/value defined in configmap or secrets for default environment
+$ kubert env set key value -s           # create new env key/value defined in secrets for default environment
+$ kubert env set key value -c           # create new env key/value defined in configmap for default environment
+$ kubert env unset key                  # remove an env key/value defined in configmap or secrets for default environment
 ```
 
 A valid url may also be used in place of a file path for input.
