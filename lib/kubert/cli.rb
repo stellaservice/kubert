@@ -56,6 +56,11 @@ module Kubert
         Deployment.perform(options)
       end
 
+      desc "env", "Sub commands to manage secrets and configmap values"
+      def env(*args)
+        Kubert::EnvCli.start(args)
+      end
+
       desc "rollback", "Rollback a deployment, reverse of a kubert deploy command with same flags"
       method_option :namespace, type: :string, aliases: "-n"
       method_option :environment, type: :string, aliases: "-e"

@@ -47,6 +47,8 @@ module Kubert
         $stdin.gets
       end
       yield
+    rescue Interrupt
+      puts "Aborting #{action}"
     end
 
     def report_status(action)

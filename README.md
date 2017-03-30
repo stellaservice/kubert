@@ -40,15 +40,21 @@ kube_config_path is probably not needed unless your kubernetes config is located
 
 ###Example usage
 ```
-$ kubert console                  # open a console on a task_pod
-$ kubert execute rake db:migrate  # run a migration
-$ kubert list web                 # list all running web pods
-$ kubert sandbox                  # only if rails c/rails console is console_command above, opens console wrapped in DB transaction
-$ kubert context                  # print current kubectl context/cluster
-$ kubert deploy -e prd            # perform a production deployment
-$ kubert rollback -e prd          # rollback a production deployment
-$ kubert deploy                   # perform a deployment to the default environment
-$ kubert logs web                 # tail the logs from all web pods and interleave together
+$ kubert console                        # open a console on a task_pod
+$ kubert execute rake db:migrate        # run a migration
+$ kubert list web                       # list all running web pods
+$ kubert sandbox                        # only if rails c/rails console is console_command above, opens console wrapped in DB transaction
+$ kubert context                        # print current kubectl context/cluster
+$ kubert deploy -e prd                  # perform a production deployment
+$ kubert rollback -e prd                # rollback a production deployment
+$ kubert deploy                         # perform a deployment to the default environment
+$ kubert logs web                       # tail the logs from all web pods and interleave together
+$ kubert env get                        # print all secret/configmap values, with secrets sanitized showing last 4 characters
+$ kubert env get --cleartext-secrets    # print all secret/configmap values, with secrets fully visible
+$ kubert env get secret-or-config-key   # print one env value defined in configmap or secrets for default environment
+$ kubert env set key value              # update one env key/value defined in configmap or secrets for default environment
+$ kubert env set key value -s           # create new env key/value defined in secrets for default environment
+$ kubert env set key value -c           # create new env key/value defined in configmap for default environment
 ```
 
 A valid url may also be used in place of a file path for input.
