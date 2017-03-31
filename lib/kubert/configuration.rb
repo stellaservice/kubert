@@ -9,6 +9,8 @@ module Kubert
     {
       default_environment: nil,
       command_prefix: nil,
+      s3_secret_path: nil,
+      s3_config_path: nil,
       kube_config_path: DEFAULT_KUBE_CONFIG_PATH,
       contexts: [],
       excluded_deployments: [],
@@ -44,6 +46,26 @@ module Kubert
       end
     end
 
+    def config_file_name
+      "#{configuration[:project_name]}#{KY::Manipulation::CONFIG_SUFFIX}"
+    end
+
+    def secret_file_name
+      "#{configuration[:project_name]}#{KY::Manipulation::SECRET_SUFFIX}"
+    end
+
+    def current_namespace
+      ky_configuration[:namespace]        ||
+      default_namespace                   ||
+      (raise "MUST DEFINE A NAMESPACE FOR POD OPERATIONS, ky namespace, default_namespace or default_environment")
+    end
+
+    def current_environment
+      ky_configuration[:environment]        ||
+      default_environment                   ||
+      (raise "MUST DEFINE AN ENVIRONMENT FOR SECRETS, ky environment, environment flag in command or default_environment")
+    end
+
     private
 
     def random_pod_type
@@ -55,10 +77,5 @@ module Kubert
       .first
     end
 
-    def current_namespace
-      ky_configuration[:namespace]        ||
-      default_namespace                   ||
-      (raise "MUST DEFINE A NAMESPACE FOR POD OPERATIONS, ky namespace, default_namespace or default_environment")
-    end
   end
 end

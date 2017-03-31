@@ -6,6 +6,7 @@ require_relative "kubert/pods"
 require_relative "kubert/deployment"
 require_relative "kubert/environment"
 require_relative "kubert/configuration"
+require_relative "kubert/file_access"
 require_relative "kubert/env_cli"
 
 module Kubert

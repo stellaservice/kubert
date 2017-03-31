@@ -9,16 +9,20 @@ module Kubert
       new(key, value, options).set
     end
 
+    def self.unset(key, options)
+      new(key, nil, options).set
+    end
+
     def initialize(key, value, raw_options)
       @key      = key
       @value    = value
       @options  = raw_options.with_indifferent_access
       abort("ERROR: Cannot specify env set as both new_secret and new_config") if options[:new_config] && options[:new_secret]
-      @config_data, @secret_data = parse_yaml(:config_path), parse_yaml(:secret_path)
+      Kubert.ky_configuration(options) # memoizes and avoids passing to FileAccess
+      @config_data = FileAccess.new(:config, yaml_key)
+      @secret_data = FileAccess.new(:secret, yaml_key)
       return if print_all?
-      @found_config = config_data[:data].select {|k, v| k == yaml_key }
-      @found_secret = secret_data[:data].select {|k, v| k == yaml_key }
-      @create_mode = (options[:new_config] || options[:new_secret])&.to_sym
+      @create_mode      = (options[:new_config] || options[:new_secret])&.to_sym
     end
 
     def set
@@ -39,12 +43,12 @@ module Kubert
       when 1
         puts existing_value
       else
-        puts "ERROR! multiple entries found for key: config - #{found_config}, secret - #{found_secret}"
+        puts "ERROR! multiple entries found for key: config - #{config_data.found}, secret - #{secret_data.found}"
       end
     end
 
     private
-    attr_reader :key, :value, :options, :create_mode, :config_data, :secret_data, :found_config, :found_secret
+    attr_reader :key, :value, :options, :create_mode, :config_data, :secret_data
 
     def print_all?
       key.nil? && value.nil?
@@ -52,9 +56,9 @@ module Kubert
 
     def get_all
       puts "CONFIGMAP:"
-      output_hash(config_data[:data])
+      output_hash(config_data.data[:data])
       puts "SECRETS:"
-      output_hash(options[:cleartext_secrets] ? secret_data[:data] : obscured_secrets)
+      output_hash(options[:cleartext_secrets] ? secret_data.data[:data] : obscured_secrets)
     end
 
     def output_hash(hsh)
@@ -64,31 +68,27 @@ module Kubert
     def create
       case create_mode
       when :new_secret
-        insert_ordered_hash(secret_data)
-        File.write(env_file_path(:secret_path), secret_data.to_plain_yaml)
+        secret_data.set(value).write
       when :new_config
-        insert_ordered_hash(config_data)
-        File.write(env_file_path(:config_path), config_data.to_plain_yaml)
+        config_data.set(value).write
       else
         abort("ERROR: unknown create env type error")
       end
     end
 
     def update
-      if found_secret.any?
-        insert_ordered_hash(secret_data)
-        File.write(env_file_path(:secret_path), secret_data.to_plain_yaml)
-      elsif found_config.any?
-        insert_ordered_hash(config_data)
-        File.write(env_file_path(:config_path), config_data.to_plain_yaml)
+      if secret_data.found.any?
+        secret_data.set(value).write
+      elsif config_data.found.any?
+        config_data.set(value).write
       else
         abort("ERROR: your key is new, must specify secret or configmap with flag")
       end
     end
 
     def obscured_secrets
-      values = secret_data[:data].values
-      secret_data[:data].keys.zip(
+      values = secret_data.data[:data].values
+      secret_data.data[:data].keys.zip(
         values.map do |secret|
           obscure_length = [(secret.size - PEEK_LENGTH), 0].max
           sneak_peek = secret.slice(obscure_length, secret.size)
@@ -103,11 +103,11 @@ module Kubert
     end
 
     def existing_value
-      found_config.merge(found_secret).values.first
+      config_data.found.merge(secret_data.found).values.first
     end
 
     def total_found
-      found_secret.size + found_config.size
+      secret_data.found.size + config_data.found.size
     end
 
     def report_unchanged
@@ -115,15 +115,8 @@ module Kubert
     end
 
     def yaml_key
-      key.downcase.dasherize
+      key&.downcase&.dasherize
     end
 
-    def parse_yaml(env_key)
-      YAML.load(File.read(env_file_path(env_key))).with_indifferent_access
-    end
-
-    def env_file_path(env_key)
-      Kubert.ky_configuration(options)[env_key]
-    end
   end
 end

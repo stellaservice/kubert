@@ -26,8 +26,8 @@ module Kubert
 
     def perform
       confirm :deploy do
-        perform_with_status { `kubectl apply -f #{output_dir}/#{Kubert.configuration[:project_name]}#{KY::Manipulation::CONFIG_SUFFIX}` }
-        perform_with_status {`kubectl apply -f #{output_dir}/#{Kubert.configuration[:project_name]}#{KY::Manipulation::SECRET_SUFFIX}` }
+        perform_with_status { `kubectl apply -f #{output_dir}/#{Kubert.config_file_name}` }
+        perform_with_status {`kubectl apply -f #{output_dir}/#{Kubert.secret_file_name}` }
         compilation.deploy_generation.to_h.each do |deployment_file, _template_hash|
           perform_with_status { `kubectl apply -f #{deployment_file}` unless excluded?(deployment_file) }
         end
