@@ -44,7 +44,7 @@ s3_secret_path and s3_config_path tell kubert not to use the locally configured 
 The value provided must begin with s3:// and provide bucket name and path to a folder in bucket containing one folder per environment, i.e. for
 example above s3://my-bucket/environments/stg/my-project.secret.yml and s3://my-bucket/environments/stg/my-project.configmap.yml
 
-Kubert will also (pending feature) download from these locations when deploying to kubernetes, and then delete when done to avoid confusion/leaking data, if specified
+Kubert will also download from these locations when deploying to kubernetes, and then delete when done to avoid confusion/leaking data, if specified.
 
 ###Example usage
 ```

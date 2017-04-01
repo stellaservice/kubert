@@ -1,7 +1,7 @@
 module Kubert
   class FileAccess
     attr_reader :data
-    def initialize(type, key)
+    def initialize(type, key = nil)
       @type = type
       @key = key
       @s3_path = Kubert.public_send("s3_#{type}_path")
@@ -30,16 +30,21 @@ module Kubert
       data[:data][key]
     end
 
+    def local?
+      !s3_path
+    end
+
     def write
-      if s3_path
-        s3_object.put(body: data.to_plain_yaml, content_encoding: 'application/octet-stream', content_type: "text/vnd.yaml", metadata: {author: `whoami`})
-      else
-        write_local
-      end
+      return write_local if local?
+      s3_object.put(body: data.to_plain_yaml, content_encoding: 'application/octet-stream', content_type: "text/vnd.yaml", metadata: {author: `whoami`})
     end
 
     def write_local
       File.write(local_path, data.to_plain_yaml)
+    end
+
+    def clean_local
+      File.delete(local_path)
     end
 
     private
@@ -47,7 +52,7 @@ module Kubert
     attr_reader :s3_path, :file_name, :type, :key
 
     def file_read
-      return s3_object.get.body.read if s3_path
+      return s3_object.get.body.read unless local?
       File.read(local_path)
     end
 

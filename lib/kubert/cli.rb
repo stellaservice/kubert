@@ -38,8 +38,8 @@ module Kubert
       Pods.execute(command)
     end
 
-    desc "logs pod_type (status, default Running)", "Interleave and tail logs from all running pods of the specified type"
-    def logs(pod_type, status= :running)
+    desc "logs (pod_type, default 'web') (status, default 'Running')", "Interleave and tail logs from all running pods of the specified type"
+    def logs(pod_type='web', status= :running)
       Pods.logs(pod_type, status)
     end
 
@@ -49,9 +49,10 @@ module Kubert
       method_option :namespace, type: :string, aliases: "-n"
       method_option :environment, type: :string, aliases: "-e"
       method_option :image_tag, type: :string, aliases: "-t"
-      method_option :configmap_path, type: :string, aliases: "-c"
-      method_option :secrets_path, type: :string, aliases: "-s"
+      method_option :configmap_path, type: :string, aliases: "-k"
+      method_option :secrets_path, type: :string, aliases: "-p"
       method_option :output_dir, type: :string, aliases: "-o"
+      method_option :skip_confirmation, type: :boolean, aliases: "-s"
       def deploy
         Deployment.perform(options)
       end
@@ -65,9 +66,10 @@ module Kubert
       method_option :namespace, type: :string, aliases: "-n"
       method_option :environment, type: :string, aliases: "-e"
       method_option :image_tag, type: :string, aliases: "-t"
-      method_option :configmap_path, type: :string, aliases: "-c"
-      method_option :secrets_path, type: :string, aliases: "-s"
+      method_option :configmap_path, type: :string, aliases: "-k"
+      method_option :secrets_path, type: :string, aliases: "-p"
       method_option :output_dir, type: :string, aliases: "-o"
+      method_option :skip_confirmation, type: :boolean, aliases: "-s"
       def rollback
         Deployment.rollback(options)
       end

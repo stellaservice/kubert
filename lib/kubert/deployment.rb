@@ -8,11 +8,11 @@ module Kubert
       new(options).rollback
     end
 
-    attr_reader :project_name, :deployments, :options, :operation_statuses
+    attr_reader :project_name, :options, :operation_statuses
     def initialize(options, project_name= Kubert.configuration[:project_name])
       @project_name = project_name
-      @deployments = []
       @options = options
+      Kubert.ky_configuration(options) # memoize options for FileAccess usage
     end
 
     def rollback
@@ -26,13 +26,23 @@ module Kubert
 
     def perform
       confirm :deploy do
-        perform_with_status { `kubectl apply -f #{output_dir}/#{Kubert.config_file_name}` }
-        perform_with_status {`kubectl apply -f #{output_dir}/#{Kubert.secret_file_name}` }
-        compilation.deploy_generation.to_h.each do |deployment_file, _template_hash|
-          perform_with_status { `kubectl apply -f #{deployment_file}` unless excluded?(deployment_file) }
+        handle_env_deploy(:config) do
+          handle_env_deploy(:secret) do
+            compilation.deploy_generation.to_h.each do |deployment_file, _template_hash|
+              perform_with_status { `kubectl apply -f #{File.expand_path(deployment_file)} --record` unless excluded?(deployment_file) }
+            end
+            report_status(:deploy)
+          end
         end
-        report_status(:deploy)
       end
+    end
+
+    def handle_env_deploy(env)
+      data = FileAccess.new(:config)
+      data.write_local unless data.local?
+      perform_with_status { `kubectl apply -f #{File.expand_path(output_dir)}/#{Kubert.public_send("#{env}_file_name")} --record` }
+      yield
+      data.clean_local unless data.local?
     end
 
     def compilation
@@ -42,7 +52,7 @@ module Kubert
     private
 
     def confirm(action)
-      unless ENV['SKIP_CONFIRMATION']
+      unless options[:skip_confirmation]
         puts "Press any key to confirm, ctl-c to abort: #{action.to_s.upcase} on #{Kubert.context}"
         $stdin.gets
       end
