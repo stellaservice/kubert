@@ -32,18 +32,23 @@ module Kubert
     end
 
     def ky_configuration(options={})
-      @ky_configuration ||= KY::Configuration.new({environment: Kubert.default_environment, namespace: Kubert.default_namespace}.merge(options))
+      @ky_configuration ||= KY::Configuration.new(
+        {environment: Kubert.default_environment,
+         namespace: Kubert.default_namespace
+        }.with_indifferent_access.merge(options)
+      )
     end
 
     def ky_active?
-      ky_configuration[:image] && ky_configuration[:deployment] && ky_configuration[:procfile_path]
+      ky_default_configuration[:image] && ky_default_configuration[:deployment] && ky_default_configuration[:procfile_path]
+    end
+
+    def ky_default_configuration
+      @ky_default_configuration ||= KY::Configuration.new
     end
 
     def configuration
-      @configuration ||= begin
-        temp_ky_configuration = KY::Configuration.new
-        (temp_ky_configuration[:kubert] || {}).merge(project_name: temp_ky_configuration[:project_name])
-      end
+      @configuration ||= (ky_default_configuration[:kubert] || {}).merge(project_name: ky_default_configuration[:project_name])
     end
 
     def config_file_name
@@ -76,6 +81,5 @@ module Kubert
       .split("-")
       .first
     end
-
   end
 end
