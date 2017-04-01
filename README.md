@@ -11,6 +11,9 @@ Compile and Rollback actions are only available if using ky for generating your 
 ky manages the scope of a deployment as a group of related, seperate kubernetes deployments.  Typing `ky example` at the console will import example ky configuration, including kubert configuration.  You may ignore/delete most of this if not using ky itself, and focus primarily on the kubert section of the yml for a few pieces of kubert configuration...  the important ones are these:
 
 ```
+environments: [dev, stg, prd]
+secret_path: "deploy/my-project.secret.yml"
+config_path: "deploy/my-project.configmap.yml"
 project_name: "my-project"
 kubert:
   contexts:
@@ -27,7 +30,12 @@ kubert:
   s3_config_path: s3://my-bucket/environments     # Ditto, with or w/o trailing slash, less likely as could be checked in but supporting for symmetry
 ```
 
-The project name is used by ky and assumes a metadata namespace for your app deployments in the format of `{{project_name}}-{{deployment_name}}`, so as long as your deployments obey this pattern it should be usable for you without ky.
+project_name is used by ky and assumes a metadata namespace for your app deployments in the format of `{{project_name}}-{{deployment_name}}`, so as long as your deployments obey this pattern it should be usable for you without ky.
+
+environments defines valid environments with overrideable configuration located in the same directory as ky config with names like `stg.yml`
+
+secret_path and config_path will likely NOT be defined in your global ky configuration as above but in environment specific files... ky assumes one such file per environment listed in the environments config, and merges any keys defined in those files (under a configuration key) as overrides of the global ky config, but perhaps in this example dev and stg share configmap and secret so only prd needs to override these
+
 contexts is used to create convenience functions for switching between different clusters defined in the same kubeconfig file, i.e. `kubert staging` with above config will switch/ensure your config is using staging.example.com
 
 excluded_deployments says not to deploy the following deployments defined in your Procfile during a normal deployment, and not to rollback during a rollback.
