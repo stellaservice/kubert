@@ -26,23 +26,25 @@ module Kubert
 
     def perform
       confirm :deploy do
-        handle_env_deploy(:config) do
-          handle_env_deploy(:secret) do
-            compilation.deploy_generation.to_h.each do |deployment_file, _template_hash|
-              perform_with_status { `kubectl apply -f #{File.expand_path(deployment_file)} --record` unless excluded?(deployment_file) }
-            end
-            report_status(:deploy)
+        handle_env_deploy do
+          compilation.deploy_generation.to_h.each do |deployment_file, _template_hash|
+            perform_with_status { `kubectl apply -f #{File.expand_path(deployment_file)} --record` unless excluded?(deployment_file) }
           end
+          report_status(:deploy)
         end
       end
     end
 
-    def handle_env_deploy(env)
-      data = FileAccess.new(:config)
-      data.write_local unless data.local?
-      perform_with_status { `kubectl apply -f #{File.expand_path(output_dir)}/#{Kubert.public_send("#{env}_file_name")} --record` }
+    def handle_env_deploy
+      config_data = FileAccess.new(:config)
+      config_data.write_local unless config_data.local?
+      secret_data = FileAccess.new(:secret)
+      secret_data.write_local unless secret_data.local?
+      perform_with_status { `kubectl apply -f #{File.expand_path(output_dir)}/#{Kubert.config_file_name} --record` }
+      perform_with_status { `kubectl apply -f #{File.expand_path(output_dir)}/#{Kubert.secret_file_name} --record` }
       yield
-      data.clean_local unless data.local?
+      secret_data.clean_local unless secret_data.local?
+      config_data.clean_local unless config_data.local?
     end
 
     def compilation

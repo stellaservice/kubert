@@ -44,7 +44,7 @@ module Kubert
     end
 
     def clean_local
-      File.delete(local_path)
+      File.delete(local_path) unless local?
     end
 
     private
