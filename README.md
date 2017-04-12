@@ -54,7 +54,7 @@ example above s3://my-bucket/environments/stg/my-project.secret.yml and s3://my-
 
 Kubert will also download from these locations when deploying to kubernetes, and then delete when done to avoid confusion/leaking data, if specified.
 
-###Example usage
+### Example usage
 ```
 $ kubert console                        # open a console on a task_pod
 $ kubert execute rake db:migrate        # run a migration
