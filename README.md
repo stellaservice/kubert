@@ -73,5 +73,3 @@ $ kubert env set key value -s           # create new env key/value defined in se
 $ kubert env set key value -c           # create new env key/value defined in configmap for default environment
 $ kubert env unset key                  # remove an env key/value defined in configmap or secrets for default environment
 ```
-
-A valid url may also be used in place of a file path for input.
